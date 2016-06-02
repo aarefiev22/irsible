@@ -71,6 +71,12 @@ def main():
     kernel_params = _parse_kernel_cmdline()
     api_url = kernel_params.get('ironic_api_url')
     deployment_id = kernel_params.get('deployment_id')
+    inspect = kernel_params.get('inspect')
+    # TODO(aarefiev): change ssh driver
+    ironic_driver = kernel_params.get('callback-driver-name', 'ansible_ssh')
+    if inspect and api_url is None:
+        _process_error('Ironic ansible callback: Mandatory parameter '
+                       '"ironic_api_url" is missing.')
     if api_url is None or deployment_id is None:
         _process_error('Mandatory parameter ("ironic_api_url" or '
                        '"deployment_id") is missing.')
@@ -96,9 +102,14 @@ def main():
 
     data = {"callback_url": "ssh://" + boot_ip}
 
-    passthru = '%(api-url)s/v1/nodes/%(deployment_id)s/vendor_passthru' \
-               '/heartbeat' % {'api-url': api_url,
-                               'deployment_id': deployment_id}
+    if inspect:
+        passthru = ('%(api-url)s/v1/drivers/%(driver)s/vendor_passthru'
+                    '/inspect' % {'api-url': api_url,
+                                  'driver': ironic_driver}
+    else:
+        passthru = '%(api-url)s/v1/nodes/%(deployment_id)s/vendor_passthru' \
+                   '/heartbeat' % {'api-url': api_url,
+                                   'deployment_id': deployment_id}
 
     for attempt in range(_POST_CALLBACK_MAX_ITERATION):
         try:
