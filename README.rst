@@ -18,6 +18,7 @@ Included packages
 * parted
 * util-linux
 * qemu-utils (build from 2.5.1 source)
+* dmidecode
 
 Current version takes about 80MB of RAM when booted.
 
